@@ -169,6 +169,8 @@ def create_generators(args):
               base_dir = args.image_dir,
             image_min_side=960,
             image_max_side=1280,
+            positive_overlap=args.positive_overlap,
+            negative_overlap=args.negative_overlap,
           )
 
         if args.val_annotations:
@@ -179,6 +181,8 @@ def create_generators(args):
               base_dir = args.image_dir,
               image_min_side=960,
               image_max_side=1280,
+            positive_overlap=args.positive_overlap,
+            negative_overlap=args.negative_overlap,
             )
         else:
             validation_generator = None
@@ -241,6 +245,8 @@ def parse_args(args):
     parser.add_argument('--no-evaluation', help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
     parser.add_argument('--image_dir', help='wher images are.', required=True)
     parser.add_argument('--lr', help='learning rate', default = 0.001, type=float)
+    parser.add_argument('--positive-overlap', help='positive iou', default = 0.5, type=float)
+    parser.add_argument('--negative-overlap', help='negative iou', default = 0.4, type=float)
 
     return check_args(parser.parse_args(args))
 
