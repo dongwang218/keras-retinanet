@@ -24,6 +24,8 @@ import os
 
 import cv2
 import pickle
+import textwrap
+import itertools
 
 
 def _compute_ap(recall, precision):
@@ -55,7 +57,7 @@ def _compute_ap(recall, precision):
     return ap
 
 
-def _get_detections(generator, model, score_threshold=0.05, max_detections=100, save_path=None):
+def _get_detections(generator, model, score_threshold=0.05, iou_threshold=0.5, max_detections=100, save_path=None, negative=False):
     """ Get the detections from the model using the generator.
 
     The result is a list of lists such that the size is:
@@ -72,6 +74,7 @@ def _get_detections(generator, model, score_threshold=0.05, max_detections=100, 
     """
     all_detections = [[None for i in range(generator.num_classes())] for j in range(generator.size())]
 
+    results = []
     for i in range(generator.size()):
         raw_image    = generator.load_image(i)
         image        = generator.preprocess_image(raw_image.copy())
@@ -108,10 +111,21 @@ def _get_detections(generator, model, score_threshold=0.05, max_detections=100, 
         image_predicted_labels = indices[1][scores_sort]
 
         if save_path is not None:
-            draw_annotations(raw_image, generator.load_annotations(i), generator=generator)
-            draw_detections(raw_image, detections[0, indices[0][scores_sort], :], generator=generator)
+            annotations = generator.load_annotations(i)
+            this_detections = detections[0, indices[0][scores_sort], :]
+            if negative:
+              if np.shape(annotations)[0] > 0 and np.shape(this_detections)[0] > 0:
+                overlaps             = compute_overlap(this_detections, annotations[:, :4])
+                no_overlap = np.max(overlaps, axis=1) < iou_threshold
+                this_detections = this_detections[no_overlap]
+                no_overlap = np.max(overlaps, axis=0) < iou_threshold
+                annotations = annotations[no_overlap]
+            if np.shape(annotations)[0] > 0 or np.shape(this_detections)[0] > 0:
+              draw_annotations(raw_image, annotations, generator=generator)
+              draw_detections(raw_image, this_detections, generator=generator)
 
-            cv2.imwrite(os.path.join(save_path, '{}.png'.format(i)), raw_image)
+              cv2.imwrite(os.path.join(save_path, '{}.png'.format(i)), raw_image)
+              results.append((generator.image_path(i), annotations, this_detections))
 
         # copy detections to all_detections
         for label in range(generator.num_classes()):
@@ -119,6 +133,32 @@ def _get_detections(generator, model, score_threshold=0.05, max_detections=100, 
 
         print('{}/{}'.format(i, generator.size()), end='\r')
 
+    if save_path is not None:
+      with open(os.path.join(save_path, 'result.xml'), 'w') as f:
+        f.write(textwrap.dedent(
+          """<?xml version='1.0' encoding='ISO-8859-1'?>
+          <?xml-stylesheet type='text/xsl' href='image_metadata_stylesheet.xsl'?>
+          <dataset>
+          <name>imglab dataset</name>
+          <comment>Created by imglab tool.</comment>
+          <images>
+          """)
+        )
+        def print_box(b, label):
+            f.write("<box top='%s' left='%s' width='%s' height='%s'><label>%s</label></box>\n" % (int(b[1]), int(b[0]), int(b[2]-b[0]), int(b[3]-b[1]), label))
+
+        for key, annotations, predictions in results:
+          f.write("<image file='%s'>\n" % key)
+          for box in annotations:
+            print_box(box, 'T')
+          for box in predictions:
+            print_box(box, 'F')
+          f.write("</image>\n")
+        f.write(textwrap.dedent(
+          """</images>
+          </dataset>
+          """)
+        )
     return all_detections
 
 
@@ -155,7 +195,8 @@ def evaluate(
     score_threshold=0.05,
     max_detections=100,
     save_path=None,
-    diagnosis = False
+    diagnosis = False,
+    negative=False
 ):
     """ Evaluate a given dataset using a given model.
 
@@ -170,7 +211,7 @@ def evaluate(
         A dict mapping class names to mAP scores.
     """
     # gather all detections and annotations
-    all_detections     = _get_detections(generator, model, score_threshold=score_threshold, max_detections=max_detections, save_path=save_path)
+    all_detections     = _get_detections(generator, model, score_threshold=score_threshold, iou_threshold=iou_threshold, max_detections=max_detections, save_path=save_path, negative=negative)
     all_annotations    = _get_annotations(generator)
     average_precisions = {}
     recalls = {}

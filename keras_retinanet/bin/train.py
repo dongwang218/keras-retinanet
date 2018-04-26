@@ -156,8 +156,8 @@ def create_generators(args):
           max_rotation=5.0/180*math.pi,
           min_translation=(-0.05, -0.05),
           max_translation=(0.05, 0.05),
-          min_shear=0,
-          max_shear=0,
+          min_shear=-5.0/180*math.pi,
+          max_shear=5.0/180*math.pi,
           min_scaling=(0.9, 0.9),
           max_scaling=(1.1, 1.1))
 

@@ -94,6 +94,7 @@ def parse_args(args):
     parser.add_argument('--save-path',       help='Path for saving images with detections.')
     parser.add_argument('--image_dir', help='wher images are.', required=True)
     parser.add_argument('--output_metrics', help='save the precision recalls out')
+    parser.add_argument('--negative', help='Show negative predictions.', action='store_true')
 
     return parser.parse_args(args)
 
@@ -134,7 +135,8 @@ def main(args=None):
         score_threshold=args.score_threshold,
         max_detections=args.max_detections,
         save_path=args.save_path,
-      diagnosis = True
+      diagnosis = True,
+      negative=args.negative
     )
 
     # print evaluation
