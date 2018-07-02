@@ -75,6 +75,7 @@ def create_generator(args):
               image_max_side=1280,
             positive_overlap=args.positive_overlap,
             negative_overlap=args.negative_overlap,
+        shuffle_groups=False,
 
         )
     else:

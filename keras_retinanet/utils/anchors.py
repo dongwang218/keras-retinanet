@@ -16,6 +16,13 @@ limitations under the License.
 
 import numpy as np
 
+#my_anchor_ratios = [0.35, 0.62, 0.88, 1.25, 2.22]
+#my_anchor_sizes = [32, 64, 96, 160, 208]
+#my_anchor_strides = [8, 16, 24, 40, 52]
+
+my_anchor_sizes   = [32//2, 64//2, 128//2, 256//2, 512//2]
+my_anchor_strides = [8, 16, 32, 64, 128]
+my_anchor_ratios = [0.5, 1, 2]
 
 def anchor_targets_bbox(
     image_shape,
@@ -72,11 +79,11 @@ def anchors_for_shape(
     if pyramid_levels is None:
         pyramid_levels = [3, 4, 5, 6, 7]
     if strides is None:
-        strides = [2 ** x for x in pyramid_levels]
+        strides = np.array(my_anchor_strides)
     if sizes is None:
-        sizes = [2 ** (x + 1) for x in pyramid_levels] # must be same as in AnchorParameters.small
+        sizes = np.array(my_anchor_sizes)
     if ratios is None:
-        ratios = np.array([0.5, 1, 2])
+        ratios = np.array(my_anchor_ratios)
     if scales is None:
         scales = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
 
@@ -126,7 +133,7 @@ def generate_anchors(base_size=16, ratios=None, scales=None):
     """
 
     if ratios is None:
-        ratios = np.array([0.5, 1, 2])
+        ratios = np.array(my_anchor_ratios)
 
     if scales is None:
         scales = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])

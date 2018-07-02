@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pickle
 import math
 
-metrics = pickle.load(open(sys.argv[1], 'r'))
+metrics = pickle.load(open(sys.argv[1], 'rb'))
 
 average_precisions = metrics['average_precisions']
 precisions = metrics['precisions']
@@ -27,3 +27,11 @@ plt.suptitle("Mean average precision : {:0.2f}".format(sum(average_precisions.va
 fig.tight_layout()
 plt.savefig(sys.argv[2])
 plt.show()
+
+scores = metrics['scores']
+for key in scores:
+  plt.gcf().clear()
+  plt.plot(scores[key], precisions[key])
+  plt.plot(scores[key], recalls[key])
+  plt.savefig(sys.argv[2]+'pr-%s.png' % key)
+  plt.show()

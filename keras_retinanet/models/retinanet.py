@@ -18,6 +18,7 @@ import keras
 from .. import initializers
 from .. import layers
 from .. import losses
+from ..utils import anchors as utils_anchors
 
 import numpy as np
 
@@ -147,9 +148,9 @@ AnchorParameters.default = AnchorParameters(
 )
 
 AnchorParameters.small = AnchorParameters(
-    sizes   = [32//2, 64//2, 128//2, 256//2, 512//2],
-    strides = [8, 16, 32, 64, 128],
-    ratios  = np.array([0.5, 1, 2], keras.backend.floatx()),
+    sizes   = utils_anchors.my_anchor_sizes,
+    strides = utils_anchors.my_anchor_strides,
+    ratios  = np.array(utils_anchors.my_anchor_ratios, keras.backend.floatx()),
     scales  = np.array([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)], keras.backend.floatx()),
 )
 

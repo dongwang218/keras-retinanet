@@ -244,6 +244,7 @@ def parse_args(args):
     parser.add_argument('--no-snapshots',  help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--no-evaluation', help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
     parser.add_argument('--image_dir', help='wher images are.', required=True)
+    parser.add_argument('--tensorflow-output', help='Path to store snapshots of models during training (defaults to \'./snapshots\')')
     parser.add_argument('--lr', help='learning rate', default = 0.001, type=float)
     parser.add_argument('--positive-overlap', help='positive iou', default = 0.5, type=float)
     parser.add_argument('--negative-overlap', help='negative iou', default = 0.4, type=float)
@@ -274,6 +275,20 @@ def main(args=None):
         model            = keras.models.load_model(args.snapshot, custom_objects=custom_objects)
         training_model   = model
         prediction_model = model
+        if args.tensorflow_output:
+          import tensorflow as tf
+          from keras import backend as K
+
+          from tensorflow.python.framework import tensor_shape, graph_util
+          from tensorflow.python.platform import gfile
+          K.set_learning_phase(0) # to get rid of learning rate and drop out\n",
+          sess = K.get_session()
+          output_graph_def = graph_util.convert_variables_to_constants(sess, sess.graph.as_graph_def(),
+                                                               [model.outputs[-1].name.replace(':0', '')])
+          print(model.outputs[-1].name)
+          with gfile.FastGFile(args.tensorflow_output, 'wb') as f:
+            f.write(output_graph_def.SerializeToString())
+          return
     else:
         print('Creating model, this may take a second...')
         model, training_model, prediction_model = create_models(num_classes=train_generator.num_classes(), weights=None if args.weights == 'None' else args.weights, multi_gpu=args.multi_gpu, lr=args.lr)

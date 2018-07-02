@@ -38,6 +38,7 @@ if __name__ == '__main__':
   create_tf_graph(sess, model_file)
 
   image = cv2.imread(image_file).astype(np.float32)
+  original = np.copy(image)
   image[..., 0] -= 103.939
   image[..., 1] -= 116.779
   image[..., 2] -= 123.68
@@ -55,8 +56,17 @@ if __name__ == '__main__':
   # correct for image scale
   detections[0, :, :4] /= scale
 
+  verbose = True
   for idx, (label, score) in enumerate(zip(predicted_labels, scores)):
     if score < threshold:
         continue
     b = detections[0, idx, :4].astype(int)
     print(score, b)
+
+    if verbose:
+      cv2.rectangle(original, (b[0], b[1]), (b[2], b[3]), (0, 0, 255), 3)
+      caption = "{:.3f}".format(score)
+      cv2.putText(original, caption, (b[0], b[1] - 10), cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 2)
+
+  if verbose:
+    cv2.imwrite('/tmp/detected.png', original)
