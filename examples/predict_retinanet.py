@@ -64,9 +64,9 @@ if __name__ == '__main__':
     print(score, b)
 
     if verbose:
-      cv2.rectangle(original, (b[0], b[1]), (b[2], b[3]), (0, 0, 255), 3)
+      cv2.rectangle(original, (b[0], b[1]), (b[2], b[3]), (0, 0, 255), 1)
       caption = "{:.3f}".format(score)
-      cv2.putText(original, caption, (b[0], b[1] - 10), cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 2)
+      cv2.putText(original, caption, (b[0], b[1] - 10), cv2.FONT_HERSHEY_PLAIN, 1.5, (255, 255, 255), 1)
 
   if verbose:
     cv2.imwrite('/tmp/detected.png', original)
